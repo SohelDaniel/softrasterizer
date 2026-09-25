@@ -20,17 +20,17 @@ Mesh::Mesh(const std::string& filename) {
 			iss >> tag >> v.x >> v.y >> v.z;
 			m_vertices.push_back(v);
 		} else if (line.compare(0, 2, "f ") == 0) {
-			// Reading an int stops at '/', so a throwaway string eats the
-			// "/uv/normal" remainder of each group.
-			Face f;
-			std::string skip1, skip2;
-			iss >> tag >> f[0] >> skip1 >> f[1] >> skip2 >> f[2];
-
+			// A corner is "v", "v/vt", "v//vn" or "v/vt/vn". stoi reads the
+			// leading index and stops at the slash, so all four forms work.
 			// .obj counts vertices from 1, std::vector from 0.
-			f[0] -= 1;
-			f[1] -= 1;
-			f[2] -= 1;
-			m_faces.push_back(f);
+			Face f;
+			iss >> tag;
+			int corners = 0;
+			std::string group;
+			while (corners < 3 && iss >> group) {
+				f[corners++] = std::stoi(group) - 1;
+			}
+			if (corners == 3) m_faces.push_back(f);
 		}
 	}
 }

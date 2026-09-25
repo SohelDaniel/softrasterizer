@@ -18,7 +18,10 @@ std::string write_temp_obj() {
 	       "vt 0.5 0.5\n"
 	       "vn 0 0 1\n"
 	       "f 1/1/1 2/1/1 3/1/1\n"
-	       "f 3/1/1 2/1/1 1/1/1\n";
+	       "f 3/1/1 2/1/1 1/1/1\n"
+	       "f 1 2 3\n"
+	       "f 1//1 2//1 3//1\n"
+	       "f 1/1 2/1 3/1\n";
 	return path;
 }
 
@@ -30,7 +33,13 @@ void test_mesh() {
 
 	// "vt"/"vn" start with 'v' but not "v ", so they must not become vertices.
 	CHECK(mesh.vertex_count() == 3);
-	CHECK(mesh.face_count() == 2);
+
+	// All four corner spellings parse: v, v/vt, v//vn, v/vt/vn.
+	CHECK(mesh.face_count() == 5);
+	for (int i = 2; i < mesh.face_count(); i++) {
+		CHECK(mesh.face(i)[0] == 0);
+		CHECK(mesh.face(i)[2] == 2);
+	}
 
 	// Indices converted from 1-based to 0-based.
 	CHECK(mesh.face(0)[0] == 0);
