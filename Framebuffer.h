@@ -12,15 +12,11 @@ struct Color {
 	std::uint8_t b = 0;
 };
 
-// The render target: one colour buffer and one depth buffer, same size.
+// Render target: colour and depth, same dimensions. Kept together because a
+// pixel's colour and its depth must be written as one; set_if_nearer is the
+// only writer, so they cannot fall out of step.
 //
-// They are kept together because they must always be written together -- a
-// pixel's colour and the depth recorded for it have to come from the same
-// triangle, or they drift apart. `set_if_nearer` is the only way to write,
-// which makes that mistake impossible to express.
-//
-// The origin is bottom-left, so y increases upward, matching the maths rather
-// than the screen. write_tga handles the conversion.
+// Origin is bottom-left (y up). write_tga handles the conversion.
 class Framebuffer {
 public:
 	Framebuffer(int width, int height);
@@ -32,21 +28,19 @@ public:
 		return x >= 0 && y >= 0 && x < m_width && y < m_height;
 	}
 
-	// Resets colour to `c` and depth to "infinitely far".
+	// Colour to `c`, depth to kFarthest.
 	void clear(Color c = {});
 
-	// Writes colour and depth only if `z` is nearer than what is already
-	// recorded. Larger z means nearer. Returns true when the pixel was written.
+	// Writes only if z is nearer than what is stored. Larger z is nearer.
 	bool set_if_nearer(int x, int y, float z, Color c);
 
 	Color color_at(int x, int y) const;
 	float depth_at(int x, int y) const;
 
-	// Both return false if the file could not be written.
+	// Both return false on write failure.
 	bool write_tga(const std::string& path) const;
 
-	// Depth as 8-bit greyscale, auto-scaled between the nearest and farthest
-	// pixel that was actually drawn. Untouched pixels stay black.
+	// Depth as 8-bit greyscale, scaled to the range actually drawn.
 	bool write_depth_tga(const std::string& path) const;
 
 	static constexpr float kFarthest = -1e30f;

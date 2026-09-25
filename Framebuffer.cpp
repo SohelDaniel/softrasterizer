@@ -43,7 +43,7 @@ bool Framebuffer::set_if_nearer(int x, int y, float z, Color c) {
 	if (!in_bounds(x, y)) return false;
 
 	const std::size_t i = static_cast<std::size_t>(y) * m_width + x;
-	if (z <= m_depth[i]) return false;   // something nearer is already here
+	if (z <= m_depth[i]) return false;
 
 	m_depth[i] = z;
 	m_color[i] = c;
@@ -76,8 +76,7 @@ bool Framebuffer::write_depth_tga(const std::string& path) const {
 	std::ofstream out(path, std::ios::binary);
 	if (!out) return false;
 
-	// Scale to whatever depth range was actually used, so the image is
-	// readable regardless of where the camera sits.
+	// Scale to the range actually used, so the image reads at any camera distance.
 	float zmin = 0.0f;
 	float zmax = 0.0f;
 	bool any = false;
