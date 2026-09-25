@@ -4,7 +4,17 @@
 //and "v 0.80433 0.9844 0.12356" which are vertices spaning ranges [-1,1]
 #ifndef MESH_H
 #define MESH_H
+#include "Vec3.h"
+struct Traingle{
+
+};
+class Mesh {
+public:
 
 
+
+private:
+
+};
 
 #endif
