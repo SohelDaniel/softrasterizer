@@ -1,7 +1,7 @@
 CXX      = c++
 CXXFLAGS = -std=c++17 -Wall -Wextra -O2
 
-MODULES  = Framebuffer.cpp Matrix.cpp Mesh.cpp Renderer.cpp
+MODULES  = Camera.cpp Framebuffer.cpp Matrix.cpp Mesh.cpp Renderer.cpp
 APP_SRC  = main.cpp $(MODULES)
 TEST_SRC = $(wildcard tests/*.cpp) $(MODULES)
 
