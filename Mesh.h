@@ -7,42 +7,42 @@
 #include "Vec3.h"
 #include <vector>
 
-struct Triangle{
-	int triangles[3];
+struct Face{
+	int faces[3];
 	int& operator[](int i) {
-		return triangles[i];
+		return faces[i];
 	}
 	const int& operator[](int i) const{
-		return triangles[i];
+		return faces[i];
 	}
 };
 class Mesh {
 public:
 	explicit Mesh(std::string& filename);
-	int n_vertices(int i) const {
-		return vertices.size();
+	//return vertices size.
+	int vertex_count(int i) const {
+		return m_vertices.size();
 	}
-	int n_triangles(int i) const {
-		return triangles.size();
+	//return triangles sizes.
+	int face_count(int i) const {
+		return m_faces.size();
 	}
+
 	const Vec3& vertex (int i) const{
-		return vertices[i];
+		return m_vertices[i];
 	}
-	const Triangle& triangle(int i) const{
-		return triangles[i];
+
+	const Face& face(int i) const{
+		return m_faces[i];
 	}
 
 	//return a corner in a triangle
 	const Vec3 corner(int i,int j) const {
-		return vertices[triangles[i][j]];
+		return m_vertices[m_faces[i][j]];
 	}
-
-
 private:
-	std::vector<Vec3> vertices;
-	std::vector<Triangle> triangles;
-
-
+	std::vector<Vec3> m_vertices;
+	std::vector<Face> m_faces;
 };
 
 #endif

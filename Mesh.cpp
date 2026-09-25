@@ -2,10 +2,13 @@
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
+
+
+
 Mesh::Mesh(std::string& filename){
 	std::ifstream file(filename);
 	if(!file){
-		throw std::runtime_error("Could not open file: " + filename +"\n"std::endl;
+		throw std::runtime_error("Could not open file: " + filename);
 	}
 	std::string line;
 	while(std::getline(file,line)){
@@ -27,5 +30,4 @@ Mesh::Mesh(std::string& filename){
 		}
 	}
 	file.close();
-
 }
