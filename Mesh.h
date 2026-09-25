@@ -1,45 +1,38 @@
-/*This module needs to take a .obj file and turn it into indexed geometry*/
-//In an obj file we have two tyes of lines :
-//EX: "f 5/6/7 8/9/10 11/12/13" which are indices of vertices ,
-//and "v 0.80433 0.9844 0.12356" which are vertices spaning ranges [-1,1]
+// Parses a .obj into indexed geometry.
+//   "v 0.80433 0.9844 0.12356"   vertex position, roughly in [-1,1]
+//   "f 5/6/7 8/9/10 11/12/13"    face; the first number of each group is the
+//                                vertex index, the rest are uv/normal
 #ifndef MESH_H
 #define MESH_H
-#include "Vec3.h"
+
+#include <string>
 #include <vector>
 
-struct Face{
-	int faces[3];
-	int& operator[](int i) {
-		return faces[i];
-	}
-	const int& operator[](int i) const{
-		return faces[i];
-	}
+#include "Vec3.h"
+
+// Three indices into the vertex list, not three positions: a vertex shared by
+// several faces is stored once, and the faces agree on which one it is.
+struct Face {
+	int v[3] = {0, 0, 0};
+
+	int&       operator[](int i)       { return v[i]; }
+	const int& operator[](int i) const { return v[i]; }
 };
+
 class Mesh {
 public:
-	explicit Mesh(std::string& filename);
-	//return vertices size.
-	int vertex_count(int i) const {
-		return m_vertices.size();
-	}
-	//return triangles sizes.
-	int face_count(int i) const {
-		return m_faces.size();
-	}
+	// Throws std::runtime_error if the file cannot be opened.
+	explicit Mesh(const std::string& filename);
 
-	const Vec3& vertex (int i) const{
-		return m_vertices[i];
-	}
+	int vertex_count() const { return static_cast<int>(m_vertices.size()); }
+	int face_count() const   { return static_cast<int>(m_faces.size()); }
 
-	const Face& face(int i) const{
-		return m_faces[i];
-	}
+	const Vec3& vertex(int i) const { return m_vertices[i]; }
+	const Face& face(int i) const   { return m_faces[i]; }
 
-	//return a corner in a triangle
-	const Vec3 corner(int i,int j) const {
-		return m_vertices[m_faces[i][j]];
-	}
+	// Position of corner c (0..2) of face f.
+	Vec3 corner(int f, int c) const { return m_vertices[m_faces[f][c]]; }
+
 private:
 	std::vector<Vec3> m_vertices;
 	std::vector<Face> m_faces;
