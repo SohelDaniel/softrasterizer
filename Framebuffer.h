@@ -1,50 +1,61 @@
 
+#ifndef FRAMEBUFFER_H
+#define FRAMEBUFFER_H
 
-#pragma once
 #include <cstdint>
-#include <fstream>
+#include <string>
 #include <vector>
 
-#pragma pack(push,1)
-struct TGAHeader {
-    std::uint8_t  idlength = 0;
-    std::uint8_t  colormaptype = 0;
-    std::uint8_t  datatypecode = 0;
-    std::uint16_t colormaporigin = 0;
-    std::uint16_t colormaplength = 0;
-    std::uint8_t  colormapdepth = 0;
-    std::uint16_t x_origin = 0;
-    std::uint16_t y_origin = 0;
-    std::uint16_t width = 0;
-    std::uint16_t height = 0;
-    std::uint8_t  bitsperpixel = 0;
-    std::uint8_t  imagedescriptor = 0;
-};
-#pragma pack(pop)
-
-struct TGAColor {
-    std::uint8_t bgra[4] = {0,0,0,0};
-    std::uint8_t bytespp = 4;
-    std::uint8_t& operator[](const int i) { return bgra[i]; }
-    const std::uint8_t& operator[](const int i) const { return bgra[i]; }
+struct Color {
+	std::uint8_t r = 0;
+	std::uint8_t g = 0;
+	std::uint8_t b = 0;
 };
 
-struct TGAImage {
-    enum Format { GRAYSCALE=1, RGB=3, RGBA=4 };
-    TGAImage() = default;
-    TGAImage(const int w, const int h, const int bpp, TGAColor c = {});
-    bool  read_tga_file(const std::string filename);
-    bool write_tga_file(const std::string filename, const bool vflip=true, const bool rle=true) const;
-    void flip_horizontally();
-    void flip_vertically();
-    TGAColor get(const int x, const int y) const;
-    void set(const int x, const int y, const TGAColor &c);
-    int width()  const;
-    int height() const;
+// The render target: one colour buffer and one depth buffer, same size.
+//
+// They are kept together because they must always be written together -- a
+// pixel's colour and the depth recorded for it have to come from the same
+// triangle, or they drift apart. `set_if_nearer` is the only way to write,
+// which makes that mistake impossible to express.
+//
+// The origin is bottom-left, so y increases upward, matching the maths rather
+// than the screen. write_tga handles the conversion.
+class Framebuffer {
+public:
+	Framebuffer(int width, int height);
+
+	int width() const  { return m_width; }
+	int height() const { return m_height; }
+
+	bool in_bounds(int x, int y) const {
+		return x >= 0 && y >= 0 && x < m_width && y < m_height;
+	}
+
+	// Resets colour to `c` and depth to "infinitely far".
+	void clear(Color c = {});
+
+	// Writes colour and depth only if `z` is nearer than what is already
+	// recorded. Larger z means nearer. Returns true when the pixel was written.
+	bool set_if_nearer(int x, int y, float z, Color c);
+
+	Color color_at(int x, int y) const;
+	float depth_at(int x, int y) const;
+
+	// Both return false if the file could not be written.
+	bool write_tga(const std::string& path) const;
+
+	// Depth as 8-bit greyscale, auto-scaled between the nearest and farthest
+	// pixel that was actually drawn. Untouched pixels stay black.
+	bool write_depth_tga(const std::string& path) const;
+
+	static constexpr float kFarthest = -1e30f;
+
 private:
-    bool   load_rle_data(std::ifstream &in);
-    bool unload_rle_data(std::ofstream &out) const;
-    int w = 0, h = 0;
-    std::uint8_t bpp = 0;
-    std::vector<std::uint8_t> data = {};
+	int m_width;
+	int m_height;
+	std::vector<Color> m_color;
+	std::vector<float> m_depth;
 };
+
+#endif

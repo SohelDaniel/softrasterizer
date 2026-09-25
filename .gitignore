@@ -1,0 +1,13 @@
+softrasterizer
+softrasterizer_debug
+tests/run
+*.o
+*.dSYM/
+
+*.tga
+*.png
+!docs/*.png
+
+.DS_Store
+.cache/
+compile_commands.json
