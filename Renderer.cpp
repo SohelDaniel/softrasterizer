@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdlib>
 #include <utility>
 
 namespace {
@@ -56,5 +57,26 @@ void Renderer::draw_triangle(const ScreenTriangle& tri, Color color) {
 
 			m_target.set_if_nearer(x, y, depth, color);
 		}
+	}
+}
+
+ScreenVertex Renderer::to_screen(Vec3 ndc) const {
+	return {(ndc.x + 1.0f) * m_target.width()  * 0.5f,
+	        (ndc.y + 1.0f) * m_target.height() * 0.5f,
+	        ndc.z};
+}
+
+ScreenTriangle Renderer::project_face(const Mesh& mesh, int face, const Camera& camera) const {
+	return {to_screen(camera.project(mesh.corner(face, 0))),
+	        to_screen(camera.project(mesh.corner(face, 1))),
+	        to_screen(camera.project(mesh.corner(face, 2)))};
+}
+
+void Renderer::draw_mesh(const Mesh& mesh, const Camera& camera) {
+	for (int i = 0; i < mesh.face_count(); i++) {
+		const Color color = {static_cast<std::uint8_t>(std::rand() % 256),
+		                     static_cast<std::uint8_t>(std::rand() % 256),
+		                     static_cast<std::uint8_t>(std::rand() % 256)};
+		draw_triangle(project_face(mesh, i, camera), color);
 	}
 }

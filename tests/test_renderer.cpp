@@ -1,7 +1,12 @@
 #include "test.h"
 
+#include "Camera.h"
 #include "Framebuffer.h"
+#include "Mesh.h"
 #include "Renderer.h"
+
+#include <cstdio>
+#include <fstream>
 
 void test_renderer() {
 	// Right triangle with legs of 100px: area 5000, plus the boundary.
@@ -47,4 +52,27 @@ void test_renderer() {
 	r4.draw_triangle({{10, 10, 1}, {110, 10, 1}, {10, 110, 1}}, {255, 0, 0});
 	r4.draw_triangle({{10, 10, 0}, {110, 10, 0}, {10, 110, 0}}, {0, 255, 0});
 	CHECK(fb4.color_at(20, 20).r == 255);
+
+	// A face lands inside the framebuffer and keeps its winding through the
+	// camera, so a front-facing quad survives culling.
+	const std::string path = "tests/.tmp_quad.obj";
+	{
+		std::ofstream out(path);
+		out << "v -0.5 -0.5 0\nv 0.5 -0.5 0\nv 0.5 0.5 0\nv -0.5 0.5 0\n"
+		       "f 1 2 3\nf 1 3 4\n";
+	}
+	const Mesh quad(path);
+	std::remove(path.c_str());
+	CHECK(quad.face_count() == 2);
+
+	Framebuffer fb5(100, 100);
+	Renderer r5(fb5);
+	const Camera cam({0, 0, 5}, {0, 0, 0}, {0, 1, 0});
+	const ScreenTriangle st = r5.project_face(quad, 0, cam);
+	CHECK(st.a.x > 0.0f && st.a.x < 100.0f);
+	CHECK(st.a.y > 0.0f && st.a.y < 100.0f);
+
+	r5.draw_mesh(quad, cam);
+	CHECK(fb5.color_at(50, 50).r + fb5.color_at(50, 50).g + fb5.color_at(50, 50).b > 0);
+	CHECK(fb5.color_at(1, 1).r + fb5.color_at(1, 1).g + fb5.color_at(1, 1).b == 0);
 }
